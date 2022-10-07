@@ -74,6 +74,24 @@ def mayor_en_juego(a,b):
 #jumbotron
 
 
+row_input_valid_move = html.Div(
+    [
+        dbc.Row(
+            [
+                dbc.Col(dbc.Input(id="valid_move_previous_turn", placeholder="Previous turn", type="text"),),
+                dbc.Col(dbc.Input(id="valid_move_face", placeholder="Face of dice", type="text"),),
+                dbc.Col(dbc.Input(id="valid_move_number", placeholder="Number of dice", type="text"),),
+                
+            ]
+        ),
+    ]
+)
+
+
+
+
+
+
 checklist_valid_move = html.Div(
     [
         
@@ -82,19 +100,24 @@ checklist_valid_move = html.Div(
                 {"label": "Is this the first turn?", "value": 1}
             ],
             value=[1],
-            id="switches-input",
+            id="first_turn_toggle",
             switch=True
         ),
     ]
 )
 
 
-toast_valid_move = dbc.Toast(
+container_valid_mov = html.Div(
+    dbc.Container(
     [
         html.P("Insert the previous turn and your current intention of play:", className="mb-0"),
-        checklist_valid_move
+        checklist_valid_move,
+        row_input_valid_move
     ],
-    header="Valid move",
+    fluid = True,
+    className = 'py-3'
+    ),
+    className="p-3 bg-light rounded-3"
     )
 #dbc.Label("Choose a bunch"),
 
@@ -104,16 +127,16 @@ toast_valid_move = dbc.Toast(
 app.layout = html.Div(children=[
     html.Center(children = [
         html.H1(children='''Liar's Dice Optimal Play''',
-        style = {
-            'color' :colors['text'] 
-        }
-        )
-    ]),
-    toast_valid_move,
+                className="display-3",
+                style = {
+                        'color' :colors['text'] 
+                        }
+                )]),
+        container_valid_mov
+            ,
     html.Div(children='''
         Dash: A web application framework for your data.
-    '''),
-])
+    ''')])
 
 if __name__ == '__main__':
     app.run_server(debug=True)
