@@ -68,7 +68,29 @@ def mayor_en_juego(a,b):
                     return False
             if a[0] < b[0]:
                 return False
-             
+
+def mis_opciones_en_turno(lista_mis_dados,dados_totales,turno_anterior = None):
+    dict_opciones = {}
+    if turno_anterior == None:
+        for i in range(dados_totales):
+            for j in range(6):
+                dict_opciones['('+str(i+1)+','+str(j+1)+')'] = probability_of_informacion(i+1,j+1,dados_totales,lista_mis_dados)
+    else:
+        for i in range(dados_totales):
+            for j in range(6):
+                if mayor_en_juego((i+1,j+1),turno_anterior):
+                    dict_opciones['('+str(i+1)+','+str(j+1)+')'] = probability_of_informacion(i+1,j+1,dados_totales,lista_mis_dados)
+    dict_opciones['Dudo que allan '+'('+str(turno_anterior[0])+','+str(turno_anterior[1])+')'] = 1-probability_of_informacion(turno_anterior[0],turno_anterior[1],dados_totales,lista_mis_dados)
+    #casarse
+    if turno_anterior[1]== 1:
+        k =lista_mis_dados.count(1)
+        dict_opciones['Me caso con '+'('+str(turno_anterior[0])+','+str(turno_anterior[1])+')'] = scipy.stats.binom.pmf(turno_anterior[0]-k,dados_totales-len(lista_mis_dados),1/6)
+    else:
+        unos = lista_mis_dados.count(1)
+        k =lista_mis_dados.count(turno_anterior[1])
+        dict_opciones['Me caso con '+'('+str(turno_anterior[0])+','+str(turno_anterior[1])+')'] = scipy.stats.binom.pmf(turno_anterior[0]-k-unos,dados_totales-len(lista_mis_dados),1/3)
+    dict_opciones = sorted(dict_opciones.items(),key=lambda x: x[1], reverse = True)
+    return dict_opciones
 #------------------------------------------------------------------------------------------------------
 #front end
 
@@ -149,7 +171,7 @@ row_input_probablilty_sin_info = html.Div(
         dbc.Row(
             [
                 dbc.Col(dbc.Input(id="probablilty_sin_info_number", 
-                                placeholder="Current turn number of dice", 
+                                placeholder="Previous turn number of dice", 
                                 type="number",
                                 style  = {'display': 'block'},
                                 min=1)),
@@ -188,6 +210,113 @@ container_probability_sin_info = html.Div(
     ),
     className="p-3 bg-light rounded-3"
     )
+
+
+row_input_probablilty_with_info = html.Div(
+    [
+        dbc.Row(
+            [
+                dbc.Col(dbc.Input(id="probablilty_info_number", 
+                                placeholder=" Number of dice", 
+                                type="number",
+                                style  = {'display': 'block'},
+                                min=1)),
+                dbc.Col(dbc.Input(id="probablilty_info_face", 
+                                placeholder="Face of dice", 
+                                type="number",
+                                style  = {'display': 'block'},
+                                min=1, max=6, step=1
+                                )),
+                dbc.Col(dbc.Input(id="probablilty_info_total_dice", 
+                                placeholder="Total dice in game", 
+                                type="number",
+                                style  = {'display': 'block'},
+                                min=1,step=1
+                                ))
+            ]
+        ),
+        html.Br(),
+        dbc.Row([
+                dbc.Select(
+                    id="select_dice_amount_info",
+                    placeholder='How many dice do you currently have ?',
+                    options=[
+                        {"label": "1", "value": "1"},
+                        {"label": "2", "value": "2"},
+                        {"label": "3", "value": "3"},
+                        {"label": "4", "value": "4"},
+                        {"label": "5", "value": "5"},
+                        {"label": "6", "value": "6"},
+                    ],
+                )
+        ]),
+        html.Br(),
+        dbc.Row([
+            dbc.Col(dbc.Input(id="dice_1", 
+                                placeholder="Insert dice", 
+                                type="number",
+                                style  = {'display': 'block'},
+                                min=1, max=6, step=1
+                                )),
+            dbc.Col(dbc.Input(id="dice_2", 
+                                placeholder="Insert dice", 
+                                type="number",
+                                style  = {'display': 'block'},
+                                min=1, max=6, step=1
+                                )),
+            dbc.Col(dbc.Input(id="dice_3", 
+                                placeholder="Insert dice", 
+                                type="number",
+                                style  = {'display': 'block'},
+                                min=1, max=6, step=1
+                                )),
+            dbc.Col(dbc.Input(id="dice_4", 
+                                placeholder="Insert dice", 
+                                type="number",
+                                style  = {'display': 'block'},
+                                min=1, max=6, step=1
+                                )),
+            dbc.Col(dbc.Input(id="dice_5", 
+                                placeholder="Insert dice", 
+                                type="number",
+                                style  = {'display': 'block'},
+                                min=1, max=6, step=1
+                                )),
+            dbc.Col(dbc.Input(id="dice_6", 
+                                placeholder="Insert dice", 
+                                type="number",
+                                style  = {'display': 'block'},
+                                min=1, max=6, step=1
+                                ))
+        ]
+
+        )
+    ]
+)
+
+container_probability_info = html.Div(
+    dbc.Container(
+    [
+        html.H2("What is the probability of my next move considering my current dice?", className="mb-0"),
+        html.Br(),
+        html.H4("How many dice do you currently have ?",
+                className="mb-0"),
+        html.Br(),
+        row_input_probablilty_with_info,
+        html.P(id = 'probability_info_response'),
+        html.Br(),
+        html.P(children = [
+            'Hello',
+            'Test'
+        ])
+    ],
+    fluid = True,
+    className = 'py-3'
+    ),
+    className="p-3 bg-light rounded-3"
+    )
+
+
 #------------------------------------------------------------------------------------------------------
 # #callbacks
 @app.callback(
@@ -196,7 +325,7 @@ container_probability_sin_info = html.Div(
     Input('valid_move_previous_turn_face','value'),
     Input('valid_move_previous_turn_number','value'),
     Input('valid_move_face','value'),
-    Input('valid_move_number','value')],
+    Input('valid_move_number','value'),]
 
 )
 def valid_move(toggle, prev_move_face,prev_move_number,current_move_face,current_move_number):
@@ -243,6 +372,53 @@ def response_probality_sin_info(number,face,total_dice):
     else:
         response_new = probability_of_sin_informacion(number,face,total_dice)
         return ['The probablility is '+str(response_new)]
+
+@app.callback(
+    [Output('dice_1','style'),
+    Output('dice_2','style'),
+    Output('dice_3','style'),
+    Output('dice_4','style'),
+    Output('dice_5','style'),
+    Output('dice_6','style'),],
+    [Input('select_dice_amount_info','value')]
+)
+def reduce_number_of_dice(value):
+    if value == None:
+        return [{'display':'none'}]*6
+    else:
+        hide = 6-int(value)
+        return [{'display':'block'}]*int(value)+[{'display':'none'}]*hide
+
+@app.callback(
+    [Output('probability_info_response','children')],
+    [Input('dice_1','value'),
+    Input('dice_2','value'),
+    Input('dice_3','value'),
+    Input('dice_4','value'),
+    Input('dice_5','value'),
+    Input('dice_6','value'),
+    Input('select_dice_amount_info','value'),
+    Input('probablilty_info_number','value'),
+    Input('probablilty_info_face','value'),
+    Input('probablilty_info_total_dice','value')],
+    prevent_initial_call= True
+)
+def probablity_of_informacion(dice1,dice2,dice3,dice4,dice5,dice6,status,number,face,total_dice):
+    if None in [face,number,total_dice]:
+        return ['Insert values']
+    else:
+        if status == None:
+            return ['Insert values']
+        else:
+            int_status = int(status)
+            dice = [dice1,dice2,dice3,dice4,dice5,dice6]
+            if None in dice[0:int_status]:
+                return ['Insert values']
+            else:
+                return [str(probability_of_informacion(number,face,total_dice,dice[0:int_status]))]
+
+
+
 #------------------------------------------------------------------------------------------------------
 #layout
 app.layout = html.Div(children=[
@@ -257,6 +433,8 @@ app.layout = html.Div(children=[
             ,
         html.Br(),
         container_probability_sin_info,
+        html.Br(),
+        container_probability_info,
     html.Div(children='''
         Dash: A web application framework for your data.
     ''')])
