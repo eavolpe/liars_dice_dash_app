@@ -1,4 +1,5 @@
-from dash import html, dash, Input, Output
+from sqlite3 import enable_shared_cache
+from dash import html, dash, Input, Output, dash_table
 import plotly.express as px
 import pandas as pd
 import dash_bootstrap_components as dbc
@@ -303,18 +304,116 @@ container_probability_info = html.Div(
                 className="mb-0"),
         html.Br(),
         row_input_probablilty_with_info,
-        html.P(id = 'probability_info_response'),
-        html.Br(),
-        html.P(children = [
-            'Hello',
-            'Test'
-        ])
+        html.P(id = 'probability_info_response')
     ],
     fluid = True,
     className = 'py-3'
     ),
     className="p-3 bg-light rounded-3"
     )
+
+row_input_probablilty_with_moves = html.Div(
+    [
+        dbc.Row(
+            [
+                dbc.Col(dbc.Input(id="probablilty_moves_number", 
+                                placeholder=" Number of dice", 
+                                type="number",
+                                style  = {'display': 'block'},
+                                min=1)),
+                dbc.Col(dbc.Input(id="probablilty_moves_face", 
+                                placeholder="Face of dice", 
+                                type="number",
+                                style  = {'display': 'block'},
+                                min=1, max=6, step=1
+                                )),
+                dbc.Col(dbc.Input(id="probablilty_moves_total_dice", 
+                                placeholder="Total dice in game", 
+                                type="number",
+                                style  = {'display': 'block'},
+                                min=1,step=1
+                                ))
+            ]
+        ),
+        html.Br(),
+        dbc.Row([
+                dbc.Select(
+                    id="select_moves_amount_info_moves",
+                    placeholder='How many dice do you currently have ?',
+                    options=[
+                        {"label": "1", "value": "1"},
+                        {"label": "2", "value": "2"},
+                        {"label": "3", "value": "3"},
+                        {"label": "4", "value": "4"},
+                        {"label": "5", "value": "5"},
+                        {"label": "6", "value": "6"},
+                    ],
+                )
+        ]),
+        html.Br(),
+        dbc.Row([
+            dbc.Col(dbc.Input(id="dice_1_moves", 
+                                placeholder="Insert dice", 
+                                type="number",
+                                style  = {'display': 'block'},
+                                min=1, max=6, step=1
+                                )),
+            dbc.Col(dbc.Input(id="dice_2_moves", 
+                                placeholder="Insert dice", 
+                                type="number",
+                                style  = {'display': 'block'},
+                                min=1, max=6, step=1
+                                )),
+            dbc.Col(dbc.Input(id="dice_3_moves", 
+                                placeholder="Insert dice", 
+                                type="number",
+                                style  = {'display': 'block'},
+                                min=1, max=6, step=1
+                                )),
+            dbc.Col(dbc.Input(id="dice_4_moves", 
+                                placeholder="Insert dice", 
+                                type="number",
+                                style  = {'display': 'block'},
+                                min=1, max=6, step=1
+                                )),
+            dbc.Col(dbc.Input(id="dice_5_moves", 
+                                placeholder="Insert dice", 
+                                type="number",
+                                style  = {'display': 'block'},
+                                min=1, max=6, step=1
+                                )),
+            dbc.Col(dbc.Input(id="dice_6_moves", 
+                                placeholder="Insert dice", 
+                                type="number",
+                                style  = {'display': 'block'},
+                                min=1, max=6, step=1
+                                ))
+        ]
+
+        )
+    ]
+)
+
+container_probability_with_moves_info = html.Div(
+    dbc.Container(
+    [
+        html.H2("What are your next posible moves with probability", className="mb-0"),
+        html.Br(),
+        html.H4("Insert dice and previous moves?",
+                className="mb-0"),
+        html.Br(),
+        row_input_probablilty_with_moves,
+        dash_table.DataTable(
+        id='table',
+        data=[]),
+        html.P(id = 'table_status')
+    ],
+    fluid = True,
+    className = 'py-3'
+    ),
+    className="p-3 bg-light rounded-3"
+    )
+
 
 
 #------------------------------------------------------------------------------------------------------
@@ -417,8 +516,64 @@ def probablity_of_informacion(dice1,dice2,dice3,dice4,dice5,dice6,status,number,
             else:
                 return [str(probability_of_informacion(number,face,total_dice,dice[0:int_status]))]
 
+@app.callback(
+    [Output('dice_1_moves','style'),
+    Output('dice_2_moves','style'),
+    Output('dice_3_moves','style'),
+    Output('dice_4_moves','style'),
+    Output('dice_5_moves','style'),
+    Output('dice_6_moves','style'),],
+    [Input('select_moves_amount_info_moves','value')]
+)
 
+def show_dice_list_container(value):
+    if value == None:
+        return [{'display':'none'}]*6
+    else:
+        hide = 6-int(value)
+        return [{'display':'block'}]*int(value)+[{'display':'none'}]*hide
 
+@app.callback(
+    [
+    Output('table','data'),
+    Output('table_status','children'),],
+    [Input('select_moves_amount_info_moves','value'),
+    Input('dice_1_moves','value'),
+    Input('dice_2_moves','value'),
+    Input('dice_3_moves','value'),
+    Input('dice_4_moves','value'),
+    Input('dice_5_moves','value'),
+    Input('dice_6_moves','value'),
+    Input('probablilty_moves_total_dice','value'),
+    Input('probablilty_moves_face','value'),
+    Input('probablilty_moves_number','value')]
+)
+def show_moves_probability(amount_of_dice,
+                        dice1,
+                        dice2,
+                        dice3,
+                        dice4,
+                        dice5,
+                        dice6,
+                        total_dice,
+                        move_face,
+                        move_number):
+    if None in [total_dice,move_face,move_number]:
+        return [None, 'Insert values']
+    else:
+        if amount_of_dice == None:
+            return [None,'Insert values']
+        else:
+            int_status = int(amount_of_dice)
+            dice = [dice1,dice2,dice3,dice4,dice5,dice6,]
+            if None in dice[0:int_status]:
+                return [None,'Insert values']
+            else:
+                resp = mis_opciones_en_turno(dice[0:int_status],total_dice,(move_number,move_face))
+                resp_list = []
+                for i in resp:
+                    resp_list.append(({'Name':i[0],'Value':i[1]}))
+                return [resp_list,None]
 #------------------------------------------------------------------------------------------------------
 #layout
 app.layout = html.Div(children=[
@@ -435,7 +590,9 @@ app.layout = html.Div(children=[
         container_probability_sin_info,
         html.Br(),
         container_probability_info,
-    html.Div(children='''
+        html.Br(),
+        container_probability_with_moves_info,
+        html.Div(children='''
         Dash: A web application framework for your data.
     ''')])
 
