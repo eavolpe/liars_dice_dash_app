@@ -95,7 +95,6 @@ def mis_opciones_en_turno(lista_mis_dados,dados_totales,turno_anterior = None):
 #------------------------------------------------------------------------------------------------------
 #front end
 
-
 row_input_valid_move = html.Div(
     [
         dbc.Row(
@@ -397,10 +396,11 @@ row_input_probablilty_with_moves = html.Div(
 container_probability_with_moves_info = html.Div(
     dbc.Container(
     [
-        html.H2("What are your next posible moves with probability", className="mb-0"),
+        html.H2("What are your next posible moves with their respective probability?", className="mb-0"),
         html.Br(),
-        html.H4("Insert dice and previous moves?",
+        html.H4("Insert dice and previous move",
                 className="mb-0"),
+        html.P('If this is the first move in the game you can in put a small bet.'),
         html.Br(),
         row_input_probablilty_with_moves,
         dash_table.DataTable(
