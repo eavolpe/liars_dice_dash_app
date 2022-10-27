@@ -1,4 +1,3 @@
-from sqlite3 import enable_shared_cache
 from dash import html, dash, Input, Output, dash_table
 import plotly.express as px
 import pandas as pd
@@ -592,7 +591,7 @@ app.layout = html.Div(children=[
         container_probability_info,
         html.Br(),
         container_probability_with_moves_info,
-        html.Div(children='''
+        html.Footer(children='''
         Dash: A web application framework for your data.
     ''')])
 
